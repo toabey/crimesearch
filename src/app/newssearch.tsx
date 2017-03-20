@@ -20,7 +20,8 @@ import {
     NoHits,
     InitialLoader,
     ViewSwitcherToggle,
-    ViewSwitcherHits
+    ViewSwitcherHits,
+    MultiMatchQuery
 } from "searchkit";
 
 
@@ -31,19 +32,20 @@ import "font-awesome/css/font-awesome.min.css"
 import {FontAwesome} from 'react-fontawesome'
 import {DateRangeFilter} from "./DateRangeFilter"
 import {CrimeDateRange} from "./CrimeDateRange"
+import moment from 'moment';
+
 
 
 
 const PracticeHitsListItem = (props)=> {
     const {bemBlocks, result} = props
-    let url = result._source.newUrl
     const source:any = _.extend({}, result._source, result.highlight)
     return (
         <div className={bemBlocks.item().mix(bemBlocks.container("item"))} data-qa="hit">
             <div className={bemBlocks.item("details")}>
-                <a href={url} target="_blank"><h2 className={bemBlocks.item("Title")} dangerouslySetInnerHTML={{__html:source.title}}></h2></a>
-                <h3 className={bemBlocks.item("subtitle")}>{source.newUrl}</h3>
-                <div className={bemBlocks.item("text")} dangerouslySetInnerHTML={{__html:source.textContent}}></div>
+                <h2 className={bemBlocks.item("Title")} dangerouslySetInnerHTML={{__html:source.title}}></h2>
+                <h3 className={bemBlocks.item("subtitle")}>{source.description} </h3>
+                <div className={bemBlocks.item("text")} dangerouslySetInnerHTML={{__html:source.text}}></div>
                 <PracticeHit result={result}/>
             </div>
         </div>
@@ -102,9 +104,12 @@ class PracticeHit extends React.Component<any, any> {
                         <Modal.Title id="contained-modal-title-lg">{this.props.result._source.Title}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <p><b>URL: </b><a href={this.props.result._source.newUrl}>{this.props.result._source.newUrl}</a></p>
-                        <p><b>Title: </b>{this.props.result._source.title.toString().replace(/_/g," ")}</p>
-                        <p><b>Description: </b>{this.props.result._source.textContent}</p>
+                        <p><b>Title: </b>{this.props.result._source.title}</p>
+                        <p><b>Description: </b>{this.props.result._source.description}</p>
+                        <p><b>Article: </b>{this.props.result._source.text}</p>
+                        <p><b>Published Date: </b>{this.props.result._source.publish_date}</p>
+                        <p><b>downloaded Date: </b>{this.props.result._source.downloadDate}</p>
+                        <p><b>site: </b>{this.props.result._source.sourceDomain}</p>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button onClick={this.hideModal}>Close</Button>
@@ -115,13 +120,14 @@ class PracticeHit extends React.Component<any, any> {
     }
 }
 
-export class CrimeSearch extends React.Component<any, any> {
+
+export class NewsSearch extends React.Component<any, any> {
 
     searchkit:SearchkitManager
 
     constructor() {
         super()
-        this.searchkit = new SearchkitManager("/dial100Search")
+        this.searchkit = new SearchkitManager("/newsSearch")
         this.searchkit.translateFunction = (key)=> {
             return {"pagination.next":"Next Page"}[key]
         }
@@ -139,13 +145,15 @@ export class CrimeSearch extends React.Component<any, any> {
                                     <div className="sk-layout__top-bar sk-top-bar">
                                         <div className="sk-top-bar__content">
                                             <div className="my-logo"></div>
-                                            <SearchBox translations={{"searchbox.placeholder":"Crime Search"}} queryFields={["title","textContent"]}
-                                                       queryOptions={{"minimum_should_match":"80%"}} autofocus={true} searchOnChange={true}   />
+                                            <SearchBox translations={{"searchbox.placeholder":"News Search"}} queryBuilder={MultiMatchQuery}
+                                                       queryFields={["title","description","text","sourceDomain"]}
+                                                       queryOptions={{"minimum_should_match":"85%","fuzziness":"AUTO"}}  autofocus={true} searchOnChange={true}   />
                                         </div>
                                     </div>
                                     <div className="sk-layout__body">
                                         <div className="sk-layout__filters">
-                                            <RefinementListFilter id="site" title="Site" field="site" operator="OR" size={7}/>
+
+
                                             {/*<DateRangeFilter id="year" field="created_at" title="News Date" min={(new Date().getFullYear()-1)}*/}
                                             {/*max={new Date().getFullYear()+1}*/}
                                             {/*interval="year"*/}
@@ -155,17 +163,22 @@ export class CrimeSearch extends React.Component<any, any> {
                                                 <div className="sk-panel__header">Date Range</div>
                                                 <div className="sk-panel__content">
 
-                                            <CrimeDateRange
-                                                searchkit={this.searchkit}
-                                                field="created_at"
-                                                id="date"
-                                                title="Date Range"
-                                                showClearDates
-                                            />
+                                                    <CrimeDateRange
+                                                        searchkit={this.searchkit}
+                                                        field="publish_date"
+                                                        id="date"
+                                                        title="Date Range"
+                                                        showClearDates
+                                                    />
                                                 </div>
                                             </div>
 
-                                        </div>
+
+                                            <RefinementListFilter id="site" title="Site" field="sourceDomain" operator="OR" size={7}/>
+
+                                            <RefinementListFilter id="titleRefine" title="Title" field="title.raw" operator="OR" size={7}/>
+
+                                            </div>
 
                                         <div className="sk-layout__results sk-results-list">
                                             <div className="sk-results-list__action-bar sk-action-bar">
@@ -180,15 +193,15 @@ export class CrimeSearch extends React.Component<any, any> {
                                                 </div>
                                             </div>
                                             <ViewSwitcherHits
-                                                hitsPerPage={20} highlightFields={["title","textContent"]}
-                                                sourceFilter={["title","textContent","newUrl"]}
+                                                hitsPerPage={10} highlightFields={["title","description","text","sourceDomain"]}
+                                                sourceFilter={["title","description","text","sourceDomain","publish_date","downloadDate"]}
                                                 hitComponents = {[
                                                     {key:"list", title:"List", itemComponent:PracticeHitsListItem, defaultOption:true},
 									{key:"map", title:"Map", listComponent:PracticeHitsMap}
 								  ]}
                                                 scrollTo="body"
                                             />
-                                            <NoHits suggestionsField={"title"}/>
+                                            <NoHits suggestionsField={"description"}/>
                                             <InitialLoader component={InitialLoaderComponent}/>
                                             <Pagination showNumbers={true}/>
                                         </div>

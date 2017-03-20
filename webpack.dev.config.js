@@ -9,7 +9,7 @@ const APP_DIR = path.resolve(__dirname, './');
 const BUILD_DIR = path.resolve(__dirname, './dist');
 
 module.exports = {
-    devtool:"eval",
+    devtool:"source-map",
     entry: [
         'webpack-hot-middleware/client?reload=true',
         './src/index.tsx'
@@ -22,7 +22,7 @@ module.exports = {
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
         new webpack.NoErrorsPlugin(),
-        new ExtractTextPlugin("styles.css", {allChunks:true})
+        new ExtractTextPlugin("styles/styles.css", {allChunks:true})
     ],
     resolve: {
         // Look for modules in .ts(x) files first, then .js(x)

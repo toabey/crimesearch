@@ -9,20 +9,20 @@ const APP_DIR = path.resolve(__dirname, './');
 const BUILD_DIR = path.resolve(__dirname, './dist');
 
 module.exports = {
-    devtool:"eval",
+
     entry: [
-        'webpack-hot-middleware/client?reload=true',
         './src/index.tsx'
     ],
     output: {
         path: BUILD_DIR,
         filename: 'bundle.js',
-        publicPath: 'http://localhost:3000/static/'
+        publicPath: '/static/',
+        css: 'styles.css'
     },
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
         new webpack.NoErrorsPlugin(),
-        new ExtractTextPlugin("styles.css", {allChunks:true})
+        new ExtractTextPlugin("styles/styles.css", {allChunks:true})
     ],
     resolve: {
         // Look for modules in .ts(x) files first, then .js(x)

@@ -55,23 +55,36 @@ module.exports = {
     const EShost = "http://192.168.2.56:9200/"
     console.log('ElasticSearch server running at:'+ EShost);
 
-    //Elastic express proxy
-    SearchkitExpress({
-      host: EShost,
-      index:'crime.news',
-      queryProcessor:function(query, req, res){
-        console.log(query)
-        return query
-      }
-    }, app)
 
-    app.get('/', function(req, res) {
+
+    app.get('/dial100Search', function(req, res) {
       res.render('index');
     });
 
-    app.get('/embed', function(req, res) {
-      res.render('embed');
-    });
+      var searchkitRouter = SearchkitExpress.createRouter({
+          host:EShost,
+          index:'dial100.calls',
+          queryProcessor:function(query, req, res){
+              console.log(query)
+              return query
+          }
+      });
+      app.use("/dial100Search", searchkitRouter);
+
+      app.get('/newsSearch', function(req, res) {
+          res.render('index');
+      });
+      var searchkitRouterNews = SearchkitExpress.createRouter({
+          host:EShost,
+          index:'news-please',
+          queryProcessor:function(query, req, res){
+              console.log(query)
+              return query
+          }
+      });
+      app.use("/newsSearch", searchkitRouterNews);
+
+
 
     app.listen(port, function () {
       console.log('Node.js server running at localhost:' + port);

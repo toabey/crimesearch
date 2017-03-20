@@ -4,7 +4,7 @@
   "description": "Search open government practices. Based on SearchKit, datamaps, D3, etc.",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
+    "build": "webpack --config webpack.dev.config.js",
     "start": "node start.js"
   },
   "author": "Abey Rpse",
@@ -29,7 +29,11 @@
     "react-fontawesome": "^0.3.3",
     "express": "^4.13.4",
     "searchkit-express": "0.2.1",
-    "compression":"^1.6.2"
+    "compression":"^1.6.2",
+    "moment": "^2.15.1",
+    "react-dates": "^4.0",
+    "react-addons-shallow-compare": "^15.3.2"
+
   },
   "devDependencies": {
     "autoprefixer": "^6.3.3",
